@@ -149,18 +149,23 @@ also remove the quiet and splash on the GRUB_CMDLINE_LINUX_DEFAULT=""
 GRUB_HIDDEN_TIMEOUT=5
 GRUB_TIMEOUT_STYLE=menu
 
-once all changes are done exit the file
+once all changes are done save and exit the file
+
 
 Let's re-install the same packages above:
+
 apt install -y --reinstall grub-efi-amd64 mtools os-prober efibootmgr
 
-let's update initramfs
+let's update initramfs:
+
 update-initramfs -c -k all
 
-let's install grub
+let's install grub:
+
 grub-install /dev/nvme0n1
 
-let's update grub
+let's update grub:
+
 update-grub
 
 exit out the chroot and reboot, cross your fingers, you should be prompted for a password while GRUB is booting, once you input the password you should be able to select the kernel and boot the OS, that's it.
@@ -169,4 +174,8 @@ exit out the chroot and reboot, cross your fingers, you should be prompted for a
 
 
 
-Thanks to Redecorating for the idea of using GRUB 
+Thanks to: 
+
+Redecorating for the idea of using GRUB and for overall having ingenius solutions to problems;
+
+tr33 for the good discussion;
