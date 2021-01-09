@@ -53,112 +53,171 @@ Still on gparted select the rest of the empty space and create another partition
 Close gparted;
 
 Open the terminal, type:
+
 *cryptsetup luksFormat --type=luks1 -v /dev/nvme0n1p5* (my boot partition is on partition 5)
+
 *cryptsetup luksFormat --type=luks2 -v /dev/nvme0n1p6* (my Ubuntu partition is on partition 6)
 
 now lets open the partitions:
+
 *cryptsetup open --type=luks1 -v /dev/nvme0n1p5 EncryptedUbuntuBoot
+
 *cryptsetup open --type=luks2 -v /dev/nvme0n1p6 EncryptedUbuntuLVM
 
 now that the partitions are open, let's create the lvm on the main partition:
-pvcreate /dev/mapper/EncryptedUbuntuLVM
-vgcreate UbuntuVG /dev/mapper/EncryptedUbuntuLVM
-lvcreate -L16G UbuntuVG -n swap
-lvcreate -L60G UbuntuVG -n root
-lvcreate -L4G UbuntuVG -n tmp
-lvcreate -L4G UbuntuVG -n var
-lvcreate -L4G UbuntuVG -n var_log
-lvcreate -L4G UbuntuVG -n var_tmp
-lvcreate -l 100%FREE UbuntuVG -n home
+
+*pvcreate /dev/mapper/EncryptedUbuntuLVM
+
+*vgcreate UbuntuVG /dev/mapper/EncryptedUbuntuLVM
+
+*lvcreate -L16G UbuntuVG -n swap
+
+*lvcreate -L60G UbuntuVG -n root
+
+*lvcreate -L4G UbuntuVG -n tmp
+
+*lvcreate -L4G UbuntuVG -n var
+
+*lvcreate -L4G UbuntuVG -n var_log
+
+*lvcreate -L4G UbuntuVG -n var_tmp
+
+*lvcreate -l 100%FREE UbuntuVG -n home
 
 Now lets format the partitions, i always go for ext4, feel free to chose what you like for your partitions:
-mkfs.ext4 /dev/mapper/UbuntuVG-root -L "root"
-mkfs.ext4 /dev/mapper/UbuntuVG-home -L "home"
-mkfs.ext4 /dev/mapper/UbuntuVG-tmp -L "tmp"
-mkfs.ext4 /dev/mapper/UbuntuVG-var -L "var"
-mkfs.ext4 /dev/mapper/UbuntuVG-var_log -L "var_log"
-mkfs.ext4 /dev/mapper/UbuntuVG-var_tmp -L "var_tmp"
-mkfs.ext4 /dev/mapper/EncryptedUbuntuBoot -L "boot"
 
-now all the partitions are according to what we want, let's install ubuntu, in terminal type:
-ubiquity --no-bootloader
+*mkfs.ext4 /dev/mapper/UbuntuVG-root -L "root"
+
+*mkfs.ext4 /dev/mapper/UbuntuVG-home -L "home"
+
+*mkfs.ext4 /dev/mapper/UbuntuVG-tmp -L "tmp"
+
+*mkfs.ext4 /dev/mapper/UbuntuVG-var -L "var"
+
+*mkfs.ext4 /dev/mapper/UbuntuVG-var_log -L "var_log"
+
+*mkfs.ext4 /dev/mapper/UbuntuVG-var_tmp -L "var_tmp"
+
+*mkfs.ext4 /dev/mapper/EncryptedUbuntuBoot -L "boot"
+
+Now all the partitions are according to what we want, let's install ubuntu, in terminal type:
+
+*ubiquity --no-bootloader
 
 This will open ubuntu install, but it won't install the bootloader, it will be installed manually later, so on the installer select whatever you feel appropriate and when you reach the partitioning stage select "Something Else":
+
 select each partition created and its mount point
 
 /dev/mapper/EncryptedUbuntuBoot format as ext4 mount to /boot
+
 /dev/mapper/UbuntuVG-root format as ext4 mount to /
+
 /dev/mapper/UbuntuVG-home format as ext4 mount to /home
+
 /dev/mapper/UbuntuVG-tmp format as ext4 mount to /tmp
+
 /dev/mapper/UbuntuVG-var format as ext4 mount to /var
+
 /dev/mapper/UbuntuVG-var_log format as ext4 mount to /var_log
+
 /dev/mapper/UbuntuVG-var_tmp format as ext4 mount to /var_tmp
 
 Notice we have been ignoring swap, this is on porpose as swap seems to give an error on the installer we will fix swap after.
 
 After setting all the mountpoints continue, set the rest of the options and wait for the installation to finish, once its finished DO NOT REBOOT, select continue testing.
 
-again in the terminal we need to chroot into our install, let's setup the chroot environment:
-mount /dev/mapper/UbuntuVG-root /mnt
-mount /dev/mapper/EncryptedUbuntuBoot /mnt/boot
-mount /dev/mapper/UbuntuVG-home /mnt/home
-mount /dev/mapper/UbuntuVG-tmp /mnt/tmp
-mount /dev/mapper/UbuntuVG-var /mnt/var
-mount /dev/mapper/UbuntuVG-var_log /mnt/var/log
-mount /dev/mapper/UbuntuVG-var_tmp /mnt/var/tmp
-for n in proc sys dev etc/resolv.conf; do mount --rbind /$n /mnt/$n; done
-chroot /mnt /bin/bash
+Again in the terminal we need to chroot into our install, let's setup the chroot environment:
 
-We are now inside our Ubuntu install, now we are going to create keys, why keys? because if we don't create keys in this setup we will have to input the password 3 times two of those where the keyboard doesn't work in the first place, so in order to bypass the fact of the keyboard not working we use keys, I choose to create two different keys, one for the /boot partition and another for the main os partition, let's go
-mkdir /etc/luks
-dd if=/dev/urandom of=/etc/luks/Bootkey.keyfile bs=4096 count=1 (this is the key for the /boot partition)
-dd if=/dev/urandom of=/etc/luks/OSkey.keyfile bs=4096 count=1 (this is the key for the main OS partition)
+*mount /dev/mapper/UbuntuVG-root /mnt
+
+*mount /dev/mapper/EncryptedUbuntuBoot /mnt/boot
+
+*mount /dev/mapper/UbuntuVG-home /mnt/home
+
+*mount /dev/mapper/UbuntuVG-tmp /mnt/tmp
+
+*mount /dev/mapper/UbuntuVG-var /mnt/var
+
+*mount /dev/mapper/UbuntuVG-var_log /mnt/var/log
+
+*mount /dev/mapper/UbuntuVG-var_tmp /mnt/var/tmp
+
+*for n in proc sys dev etc/resolv.conf; do mount --rbind /$n /mnt/$n; done
+
+*chroot /mnt /bin/bash
+
+We are now inside our Ubuntu install, now we are going to create keys, why keys? because if we don't create keys in this setup we will have to input the password 3 times two of those where the keyboard doesn't work in the first place, so in order to bypass the fact of the keyboard not working we use keys, I choose to create two different keys, one for the /boot partition and another for the main os partition, let's go!
+
+*mkdir /etc/luks
+
+*dd if=/dev/urandom of=/etc/luks/Bootkey.keyfile bs=4096 count=1 (this is the key for the /boot partition)
+
+*dd if=/dev/urandom of=/etc/luks/OSkey.keyfile bs=4096 count=1 (this is the key for the main OS partition)
+
 let's set propper secure permissions:
-chmod u=rx,go-rwx /etc/luks
-chmod u=r,go-rwx /etc/luks/BootKey.keyfile
-chmod u=r,go-rwx /etc/luks/OSKey.keyfile
 
-now let's add both keyfiles to each encrypted partitions:
-cryptsetup luksAddKey /dev/nvme0n1p5 /etc/luks/BootKey.keyfile (the Bootkey to the boot partition)
+*chmod u=rx,go-rwx /etc/luks
+
+*chmod u=r,go-rwx /etc/luks/BootKey.keyfile
+
+*chmod u=r,go-rwx /etc/luks/OSKey.keyfile
+
+Now let's add both keyfiles to each encrypted partitions:
+
+*cryptsetup luksAddKey /dev/nvme0n1p5 /etc/luks/BootKey.keyfile* (the Bootkey to the boot partition)
 use the password you set up for the partition
-cryptsetup luksAddKey /dev/nvme0n1p6 /etc/luks/OSKey.keyfile (the OSkey for the main OS partition)
+
+*cryptsetup luksAddKey /dev/nvme0n1p6 /etc/luks/OSKey.keyfile* (the OSkey for the main OS partition)
 use the password you set up for the partition
 
-you can check the key was added successfully to each partition:
-cryptsetup luksDump /dev/nvme0n1p5 (you will see to keyslots occupied slot0 and slot1, slot0 is the password, slot1 is the key)
-cryptsetup luksDump /dev/nvme0n1p6 (you will see to keyslots occupied slot0 and slot1, slot0 is the password, slot1 is the key)
+You can check the key was added successfully to each partition:
 
-now let's add the keys to crypsetup conf-hooks so they get included in the initramfs.
-vi /etc/cryptsetup-initramfs/conf-hook 
+*cryptsetup luksDump /dev/nvme0n1p5* (you will see to keyslots occupied slot0 and slot1, slot0 is the password, slot1 is the key)
+
+*cryptsetup luksDump /dev/nvme0n1p6* (you will see to keyslots occupied slot0 and slot1, slot0 is the password, slot1 is the key)
+
+Now let's add the keys to crypsetup conf-hooks so they get included in the initramfs.
+*vi /etc/cryptsetup-initramfs/conf-hook 
 at the end of the file uncomment KEYFILE_PATTERN and add:
 KEYFILE_PATTERN=/etc/luks/*.keyfile
 
 now let's set the permissions on the initramfs so keys don't leak, that would be a shame wouldn't it? 
-vi /etc/initramfs-tools/initramfs.conf
-inside type UMASK=0077
+
+*vi /etc/initramfs-tools/initramfs.conf
+inside at the end of the file type UMASK=0077
 
 lets create crypttab:
-vi /etc/crypttab
+
+*vi /etc/crypttab
+
 inside type the following:
+
 EncryptedUbuntuBoot /dev/nvme0n1p5  /etc/luks/BootKey.keyfile luks
+
 EncryptedUbuntuLVM  /dev/nvme0n1p6  /etc/luks/OSKey.keyfile luks
 
-let's download grub bootloader:
-apt install grub-efi-amd64 mtools os-prober efibootmgr
+Let's download grub bootloader:
 
-now let's edit the settings before installing the bootloader:
-vi /etc/default/grub
+*apt install grub-efi-amd64 mtools os-prober efibootmgr
+
+Now let's edit the settings before installing the bootloader:
+
+*vi /etc/default/grub
 
 inside the file add the following (this is what we need to add to have GRUB asking for a password and it shall be the only password you will have to input because then the keyfiles kick in):
 
-GRUB_CMDLINE_LINUX="efi=noruntime pcie_ports=compat acpi=force"
 GRUB_ENABLE_CRYPTODISK=y
 
-also remove the quiet and splash on the GRUB_CMDLINE_LINUX_DEFAULT=""
+GRUB_CMDLINE_LINUX="efi=noruntime pcie_ports=compat acpi=force"
+
 GRUB_HIDDEN_TIMEOUT=5
+
 GRUB_TIMEOUT_STYLE=menu
 
-once all changes are done save and exit the file
+Also remove the quiet and splash on the GRUB_CMDLINE_LINUX_DEFAULT=""
+
+
+Once all changes are done save and exit the file;
 
 
 Let's re-install the same packages above:
@@ -177,7 +236,7 @@ let's update grub:
 
 update-grub
 
-exit out the chroot and reboot, cross your fingers, you should be prompted for a password while GRUB is booting, once you input the password you should be able to select the kernel and boot the OS, that's it.
+Exit out the chroot and reboot, cross your fingers, you should be prompted for a password while GRUB is booting, once you input the password you should be able to select the kernel and boot the OS, that's it.
 
 
 
@@ -187,4 +246,4 @@ Thanks to:
 
 Redecorating for the idea of using GRUB and for overall having ingenius solutions to problems;
 
-tr33 for the good discussion;
+tr33 for the good discussion and testing this one first;
