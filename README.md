@@ -1,13 +1,15 @@
 # GrubLuksUnlock
 How to Unlock Luks containers using Grub
 
-
+# Preamble
 This is a tutorial on how to unlock luks1 containers using grub bootloader.
 
 Why are you not unlocking it normally?
+
 This issue surfaced from the necessity of unlocking the luks container on Macbook Pro 16,2 that unfortunately doesn't have the kernel module loaded at the time you are prompted for the password.
 
 Then why GRUB?
+
 Because on GRUB Macbook Pro's internal keyboard is still working correctly.
 
 What does this tutorial assume?
@@ -16,40 +18,47 @@ What does this tutorial assume?
 - you want to setup encryption on your ubuntu install;
 
 The theory behind this:
+
 The basic principle behind this is that the /boot partition must be inside an encrypted partition, if that happens, then GRUB will obviously ask you for the password in order to be able to decrypt the /boot partition and then be able to read the kernel and initramfs.
 It is up to you if you want to have the whole system inisde a partition or have multiple partitions, as long as the contents of /boot are encrypted GRUB will ask for a password.
 
 How i set up this for myself?
+
 I like to use and have LVMs and obviously encrypt everything, I generally leave /boot unencrypted, however as stated above we need to encrypt boot to have grub prompting us for a password.
 Here is the setup i do on my macbook:
-- Efi
-- boot (Encrypted with luks1)
-- UbuntuLVM (encrypted with luks2)
-  - root
-  - home
-  - swap
-  - var
-  - tmp
-  - var_log
-  - var_tmp
+- Efi;
+- boot (Encrypted with luks1);
+- UbuntuLVM (encrypted with luks2);
+  - root;
+  - home;
+  - swap;
+  - var;
+  - tmp;
+  - var_log;
+  - var_tmp;
   
 Feel free to use whatever partition layout you prefer, but as i have said before make sure boot is encrypted with luks1, for the tutorial i am going to follow the steps for the layout above, feel free to addapt to your needs.
 
-Let's begin
+# Tutorial
+Let's begin!
 
-Once you boot the ubuntu iso, make sure to select your keyboard layout in ubuntu settings (lets avoid issues with password inputs because you are using a different layout).
-Connect to the internet and apt install gparted
-open gparted and select empty space and create a new partition of about 1gb for boot;
-still on gparted select the rest of the empty space and create another partition for the operating system;
-close gparted;
+Once you boot the ubuntu iso, make sure to select your keyboard layout in ubuntu settings (lets avoid issues with password inputs because you are using a different layout);
 
-open the terminal, type:
-cryptsetup luksFormat --type=luks1 -v /dev/nvme0n1p5 (my boot partition is on partition 5)
-cryptsetup luksFormat --type=luks2 -v /dev/nvme0n1p6 (my Ubuntu partition is on partition 6)
+Connect to the internet and *apt install gparted;
+
+Open gparted and select empty space and create a new partition of about 1gb for boot;
+
+Still on gparted select the rest of the empty space and create another partition for the operating system;
+
+Close gparted;
+
+Open the terminal, type:
+*cryptsetup luksFormat --type=luks1 -v /dev/nvme0n1p5* (my boot partition is on partition 5)
+*cryptsetup luksFormat --type=luks2 -v /dev/nvme0n1p6* (my Ubuntu partition is on partition 6)
 
 now lets open the partitions:
-cryptsetup open --type=luks1 -v /dev/nvme0n1p5 EncryptedUbuntuBoot
-cryptsetup open --type=luks2 -v /dev/nvme0n1p6 EncryptedUbuntuLVM
+*cryptsetup open --type=luks1 -v /dev/nvme0n1p5 EncryptedUbuntuBoot
+*cryptsetup open --type=luks2 -v /dev/nvme0n1p6 EncryptedUbuntuLVM
 
 now that the partitions are open, let's create the lvm on the main partition:
 pvcreate /dev/mapper/EncryptedUbuntuLVM
