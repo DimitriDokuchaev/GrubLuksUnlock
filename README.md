@@ -241,7 +241,7 @@ Exit out the chroot and reboot, cross your fingers, you should be prompted for a
 
 
 
-
+# Acknowledgements 
 Thanks to: 
 
 Redecorating for the idea of using GRUB and for overall having ingenius solutions to problems;
