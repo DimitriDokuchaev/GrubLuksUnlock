@@ -132,6 +132,8 @@ Again in the terminal we need to chroot into our install, let's setup the chroot
 
 *mount /dev/mapper/EncryptedUbuntuBoot /mnt/boot*
 
+*mount /dev/nvme0n1p1 /mnt/boot/efi*
+
 *mount /dev/mapper/UbuntuVG-home /mnt/home*
 
 *mount /dev/mapper/UbuntuVG-tmp /mnt/tmp*
