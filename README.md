@@ -181,7 +181,9 @@ You can check the key was added successfully to each partition:
 *cryptsetup luksDump /dev/nvme0n1p6* (you will see to keyslots occupied slot0 and slot1, slot0 is the password, slot1 is the key)
 
 Now let's add the keys to crypsetup conf-hooks so they get included in the initramfs.
+
 *vi /etc/cryptsetup-initramfs/conf-hook* 
+
 at the end of the file uncomment KEYFILE_PATTERN and add:
 KEYFILE_PATTERN=/etc/luks/*.keyfile
 
