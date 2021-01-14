@@ -130,73 +130,73 @@ After setting all the mountpoints continue, set the rest of the options and wait
 
 Again in the terminal we need to chroot into our install, let's setup the chroot environment:
 
-*mount /dev/mapper/UbuntuVG-root /mnt*
+`mount /dev/mapper/UbuntuVG-root /mnt`
 
-*mount /dev/mapper/EncryptedUbuntuBoot /mnt/boot*
+`mount /dev/mapper/EncryptedUbuntuBoot /mnt/boot`
 
-*mount /dev/nvme0n1p1 /mnt/boot/efi*
+`mount /dev/nvme0n1p1 /mnt/boot/efi`
 
-*mount /dev/mapper/UbuntuVG-home /mnt/home*
+`mount /dev/mapper/UbuntuVG-home /mnt/home`
 
-*mount /dev/mapper/UbuntuVG-tmp /mnt/tmp*
+`mount /dev/mapper/UbuntuVG-tmp /mnt/tmp`
 
-*mount /dev/mapper/UbuntuVG-var /mnt/var*
+`mount /dev/mapper/UbuntuVG-var /mnt/var`
 
-*mount /dev/mapper/UbuntuVG-var_log /mnt/var/log*
+`mount /dev/mapper/UbuntuVG-var_log /mnt/var/log`
 
-*mount /dev/mapper/UbuntuVG-var_tmp /mnt/var/tmp*
+`mount /dev/mapper/UbuntuVG-var_tmp /mnt/var/tmp`
 
-*for n in proc sys dev etc/resolv.conf; do mount --rbind /$n /mnt/$n; done*
+`for n in proc sys dev etc/resolv.conf; do mount --rbind /$n /mnt/$n; done`
 
-*chroot /mnt /bin/bash*
+`chroot /mnt /bin/bash`
 
-We are now inside our Ubuntu install, now we are going to create keys, why keys? because if we don't create keys in this setup we will have to input the password 3 times two of those where the keyboard doesn't work in the first place, so in order to bypass the fact of the keyboard not working we use keys, I choose to create two different keys, one for the /boot partition and another for the main os partition, let's go!
+We are now inside our Ubuntu install, now we are going to create keys, why keys? because if we don't create keys in this setup we will have to input the password 3 times two of those where the keyboard doesn't work in the first place, so in order to bypass the fact of the keyboard not working we use keys, I choose to create two different set of keys, one for the /boot partition and another for the main os partition, let's go!
 
-*mkdir /etc/luks*
+`mkdir /etc/luks`
 
-*dd if=/dev/urandom of=/etc/luks/Bootkey.keyfile bs=4096 count=1* (this is the key for the /boot partition)
+`dd if=/dev/urandom of=/etc/luks/Bootkey.keyfile bs=4096 count=1` (this is the key for the /boot partition)
 
-*dd if=/dev/urandom of=/etc/luks/OSkey.keyfile bs=4096 count=1* (this is the key for the main OS partition)
+`dd if=/dev/urandom of=/etc/luks/OSkey.keyfile bs=4096 count=1` (this is the key for the main OS partition)
 
 let's set propper secure permissions:
 
-*chmod u=rx,go-rwx /etc/luks*
+`chmod u=rx,go-rwx /etc/luks`
 
-*chmod u=r,go-rwx /etc/luks/BootKey.keyfile*
+`chmod u=r,go-rwx /etc/luks/BootKey.keyfile`
 
-*chmod u=r,go-rwx /etc/luks/OSKey.keyfile*
+`chmod u=r,go-rwx /etc/luks/OSKey.keyfile`
 
 Now let's add both keyfiles to each encrypted partitions:
 
-*cryptsetup luksAddKey /dev/nvme0n1p5 /etc/luks/BootKey.keyfile* (the Bootkey to the boot partition)
+`cryptsetup luksAddKey /dev/nvme0n1p5 /etc/luks/BootKey.keyfile` (the Bootkey to the boot partition)
 
 use the password you set up for the partition
 
-*cryptsetup luksAddKey /dev/nvme0n1p6 /etc/luks/OSKey.keyfile* (the OSkey for the main OS partition)
+`cryptsetup luksAddKey /dev/nvme0n1p6 /etc/luks/OSKey.keyfile` (the OSkey for the main OS partition)
 
 use the password you set up for the partition
 
 You can check the key was added successfully to each partition:
 
-*cryptsetup luksDump /dev/nvme0n1p5* (you will see to keyslots occupied slot0 and slot1, slot0 is the password, slot1 is the key)
+`cryptsetup luksDump /dev/nvme0n1p5` (you will see to keyslots occupied slot0 and slot1, slot0 is the password, slot1 is the key)
 
-*cryptsetup luksDump /dev/nvme0n1p6* (you will see to keyslots occupied slot0 and slot1, slot0 is the password, slot1 is the key)
+`cryptsetup luksDump /dev/nvme0n1p6` (you will see to keyslots occupied slot0 and slot1, slot0 is the password, slot1 is the key)
 
 Now let's add the keys to crypsetup conf-hooks so they get included in the initramfs.
 
-*vi /etc/cryptsetup-initramfs/conf-hook* 
+`vi /etc/cryptsetup-initramfs/conf-hook` 
 
 at the end of the file uncomment KEYFILE_PATTERN and add:
 KEYFILE_PATTERN=/etc/luks/*.keyfile
 
 now let's set the permissions on the initramfs so keys don't leak, that would be a shame wouldn't it? 
 
-*vi /etc/initramfs-tools/initramfs.conf*
+`vi /etc/initramfs-tools/initramfs.conf`
 inside at the end of the file type UMASK=0077
 
 lets create crypttab:
 
-*vi /etc/crypttab*
+`vi /etc/crypttab`
 
 inside type the following:
 
@@ -206,11 +206,11 @@ EncryptedUbuntuLVM  /dev/nvme0n1p6  /etc/luks/OSKey.keyfile luks
 
 Let's download grub bootloader:
 
-*apt install grub-efi-amd64 mtools os-prober efibootmgr*
+`apt install grub-efi-amd64 mtools os-prober efibootmgr`
 
 Now let's edit the settings before installing the bootloader:
 
-*vi /etc/default/grub*
+`vi /etc/default/grub`
 
 inside the file add the following (this is what we need to add to have GRUB asking for a password and it shall be the only password you will have to input because then the keyfiles kick in):
 
@@ -229,22 +229,21 @@ Once all changes are done save and exit the file;
 
 Let's re-install the same packages above:
 
-*apt install -y --reinstall grub-efi-amd64 mtools os-prober efibootmgr*
+`apt install -y --reinstall grub-efi-amd64 mtools os-prober efibootmgr`
 
 let's update initramfs:
 
-*update-initramfs -c -k all*
+`update-initramfs -c -k all`
 
 let's install grub:
 
-*grub-install /dev/nvme0n1*
+`grub-install /dev/nvme0n1`
 
 let's update grub:
 
-*update-grub*
+`update-grub`
 
 Exit out the chroot and reboot, cross your fingers, you should be prompted for a password while GRUB is booting, once you input the password you should be able to select the kernel and boot the OS, that's it.
-
 
 
 # Acknowledgements 
