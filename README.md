@@ -4,25 +4,25 @@ How to Unlock Luks containers using Grub
 # Preamble
 This is a tutorial on how to unlock luks1 containers using grub bootloader.
 
-Why are you not unlocking it normally?
+## Why are you not unlocking it normally?
 
 This issue surfaced from the necessity of unlocking the luks container on Macbook Pro 16,2 that unfortunately doesn't have the kernel module loaded at the time you are prompted for the password.
 
-Then why GRUB?
+## Then why GRUB?
 
 Because on GRUB Macbook Pro's internal keyboard is still working correctly.
 
-What does this tutorial assume?
+## What does this tutorial assume?
 - you are running ubuntu;
 - you are using a macbook pro with a T2 chip;
 - you want to setup encryption on your ubuntu install;
 
-The theory behind this:
+## The theory behind this:
 
 The basic principle behind this is that the /boot partition must be inside an encrypted partition, if that happens, then GRUB will obviously ask you for the password in order to be able to decrypt the /boot partition and then be able to read the kernel and initramfs.
 It is up to you if you want to have the whole system inisde a partition or have multiple partitions, as long as the contents of /boot are encrypted GRUB will ask for a password.
 
-How i set up this for myself?
+## How i set up this for myself?
 
 I like to use and have LVMs and obviously encrypt everything, I generally leave /boot unencrypted, however as stated above we need to encrypt boot to have grub prompting us for a password.
 Here is the setup i do on my macbook:
