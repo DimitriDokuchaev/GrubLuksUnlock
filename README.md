@@ -44,7 +44,9 @@ Let's begin!
 
 Once you boot the ubuntu iso, make sure to select your keyboard layout in ubuntu settings (lets avoid issues with password inputs because you are using a different layout);
 
-Connect to the internet and `apt install gparted`
+Connect to the internet and open the terminal escalate to root: 
+
+`apt install gparted`
 
 Open gparted and select empty space and create a new partition of about 1gb for boot;
 
@@ -54,59 +56,59 @@ Close gparted;
 
 Open the terminal, type:
 
-*cryptsetup luksFormat --type=luks1 -v /dev/nvme0n1p5* (my boot partition is on partition 5)
+`cryptsetup luksFormat --type=luks1 -v /dev/nvme0n1p5` (my boot partition is on partition 5)
 
-*cryptsetup luksFormat --type=luks2 -v /dev/nvme0n1p6* (my Ubuntu partition is on partition 6)
+`cryptsetup luksFormat --type=luks2 -v /dev/nvme0n1p6` (my Ubuntu partition is on partition 6)
 
 now lets open the partitions:
 
-*cryptsetup open --type=luks1 -v /dev/nvme0n1p5 EncryptedUbuntuBoot*
+`cryptsetup open --type=luks1 -v /dev/nvme0n1p5 EncryptedUbuntuBoot`
 
-*cryptsetup open --type=luks2 -v /dev/nvme0n1p6 EncryptedUbuntuLVM*
+`cryptsetup open --type=luks2 -v /dev/nvme0n1p6 EncryptedUbuntuLVM`
 
 now that the partitions are open, let's create the lvm on the main partition:
 
-*pvcreate /dev/mapper/EncryptedUbuntuLVM*
+`pvcreate /dev/mapper/EncryptedUbuntuLVM`
 
-*vgcreate UbuntuVG /dev/mapper/EncryptedUbuntuLVM*
+`vgcreate UbuntuVG /dev/mapper/EncryptedUbuntuLVM`
 
-*lvcreate -L16G UbuntuVG -n swap*
+`lvcreate -L16G UbuntuVG -n swap`
 
-*lvcreate -L60G UbuntuVG -n root*
+`lvcreate -L60G UbuntuVG -n root`
 
-*lvcreate -L4G UbuntuVG -n tmp*
+`lvcreate -L4G UbuntuVG -n tmp`
 
-*lvcreate -L4G UbuntuVG -n var*
+`lvcreate -L4G UbuntuVG -n var`
 
-*lvcreate -L4G UbuntuVG -n var_log*
+`lvcreate -L4G UbuntuVG -n var_log`
 
-*lvcreate -L4G UbuntuVG -n var_tmp*
+`lvcreate -L4G UbuntuVG -n var_tmp`
 
-*lvcreate -l 100%FREE UbuntuVG -n home*
+`lvcreate -l 100%FREE UbuntuVG -n home`
 
 Now lets format the partitions, i always go for ext4, feel free to chose what you like for your partitions:
 
-*mkfs.ext4 /dev/mapper/UbuntuVG-root -L "root"*
+`mkfs.ext4 /dev/mapper/UbuntuVG-root -L "root"`
 
-*mkfs.ext4 /dev/mapper/UbuntuVG-home -L "home"*
+`mkfs.ext4 /dev/mapper/UbuntuVG-home -L "home"`
 
-*mkfs.ext4 /dev/mapper/UbuntuVG-tmp -L "tmp"*
+`mkfs.ext4 /dev/mapper/UbuntuVG-tmp -L "tmp"`
 
-*mkfs.ext4 /dev/mapper/UbuntuVG-var -L "var"*
+`mkfs.ext4 /dev/mapper/UbuntuVG-var -L "var"`
 
-*mkfs.ext4 /dev/mapper/UbuntuVG-var_log -L "var_log"*
+`mkfs.ext4 /dev/mapper/UbuntuVG-var_log -L "var_log"`
 
-*mkfs.ext4 /dev/mapper/UbuntuVG-var_tmp -L "var_tmp"*
+`mkfs.ext4 /dev/mapper/UbuntuVG-var_tmp -L "var_tmp"`
 
-*mkfs.ext4 /dev/mapper/EncryptedUbuntuBoot -L "boot"*
+`mkfs.ext4 /dev/mapper/EncryptedUbuntuBoot -L "boot"`
 
 Now all the partitions are according to what we want, let's install ubuntu, in terminal type:
 
-*ubiquity --no-bootloader*
+`ubiquity --no-bootloader`
 
 This will open ubuntu install, but it won't install the bootloader, it will be installed manually later, so on the installer select whatever you feel appropriate and when you reach the partitioning stage select "Something Else":
 
-select each partition created and its mount point
+Select each partition created and its mount point
 
 /dev/mapper/EncryptedUbuntuBoot format as ext4 mount to /boot
 
@@ -124,7 +126,7 @@ select each partition created and its mount point
 
 Notice we have been ignoring swap, this is on porpose as swap seems to give an error on the installer we will fix swap after.
 
-After setting all the mountpoints continue, set the rest of the options and wait for the installation to finish, once its finished DO NOT REBOOT, select continue testing.
+After setting all the mountpoints continue, set the rest of the options and wait for the installation to finish, once its finished **DO NOT REBOOT**, select continue testing.
 
 Again in the terminal we need to chroot into our install, let's setup the chroot environment:
 
