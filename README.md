@@ -44,7 +44,7 @@ Let's begin!
 
 Once you boot the ubuntu iso, make sure to select your keyboard layout in ubuntu settings (lets avoid issues with password inputs because you are using a different layout);
 
-Connect to the internet and *apt install gparted;
+Connect to the internet and `apt install gparted`
 
 Open gparted and select empty space and create a new partition of about 1gb for boot;
 
